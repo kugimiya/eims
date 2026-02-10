@@ -56,13 +56,13 @@ if [[ -z "$PASSWORD_HASH" ]]; then
   exit 1
 fi
 
-# Пишем .env
-cat > .env << EOF
-# Сгенерировано setup.sh $(date -Iseconds 2>/dev/null || date)
-
-METRICS_USER=$METRICS_USER
-METRICS_PASSWORD_HASH=$PASSWORD_HASH
-EOF
+# Пишем .env (хэш в одинарных кавычках, чтобы $ не интерпретировались как переменные)
+{
+  echo "# Сгенерировано setup.sh $(date -Iseconds 2>/dev/null || date)"
+  echo ""
+  echo "METRICS_USER=$METRICS_USER"
+  echo "METRICS_PASSWORD_HASH='$PASSWORD_HASH'"
+} > .env
 
 echo "Создан файл .env (логин: $METRICS_USER)."
 echo
