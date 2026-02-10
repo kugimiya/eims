@@ -48,13 +48,13 @@ done
 echo
 echo "Генерация хэша пароля через Caddy..."
 
-# Пароль передаём через stdin (без --plaintext), чтобы не светить его в argv и корректно обработать спецсимволы
-PASSWORD_HASH=$(echo -n "$password" | docker run --rm -i caddy:alpine caddy hash-password 2>/dev/null)
+# Пароль в контейнер через env — без stdin (избегаем EOF), спецсимволы сохраняются
+PASSWORD_HASH=$(docker run --rm -e PASS="$password" caddy:alpine sh -c 'caddy hash-password --plaintext "$PASS"' 2>/dev/null)
+unset password password2
 if [[ -z "$PASSWORD_HASH" ]]; then
   echo "Не удалось сгенерировать хэш. Проверьте, что образ доступен: docker pull caddy:alpine"
   exit 1
 fi
-unset password password2
 
 # Пишем .env
 cat > .env << EOF
