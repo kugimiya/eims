@@ -1,0 +1,8 @@
+# Слушаем порт 9100, Basic Auth, проксируем на node-exporter.
+# Логин и хэш пароля задаются через METRICS_USER и METRICS_PASSWORD_HASH в .env
+:9100 {
+  basicauth {
+    {$METRICS_USER} {$METRICS_PASSWORD_HASH}
+  }
+  reverse_proxy node-exporter:9100
+}

@@ -1,0 +1,41 @@
+# Node Exporter за аутентификацией — для установки на любую Linux-машину.
+# Копируйте эту папку на сервер, настройте .env и запускайте: docker compose up -d
+# Метрики доступны на порту 9100 по HTTP Basic Auth.
+
+services:
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --path.rootfs=/rootfs
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    networks:
+      - metrics
+
+  # Прокси с Basic Auth перед Node Exporter
+  metrics-auth:
+    image: caddy:alpine
+    container_name: node-exporter-auth
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    environment:
+      - METRICS_USER=${METRICS_USER:-metrics}
+      - METRICS_PASSWORD_HASH=${METRICS_PASSWORD_HASH}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - node-exporter
+    networks:
+      - metrics
+
+networks:
+  metrics:
+    driver: bridge
